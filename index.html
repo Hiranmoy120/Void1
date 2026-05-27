@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>If you have come this far... why not go through it</title>
+    <style>
+        :root {
+            --bg: #020202;
+            --panel: #0a0a0a;
+            --accent: #8B0000;
+            --glow: #ff3333;
+            --text: #ffdddd;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 30%, rgba(139, 0, 0, 0.1) 0%, transparent 75%);
+            z-index: -1;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--panel);
+            border-right: 2px solid var(--accent);
+            padding: 20px 0;
+            transition: all 0.3s;
+        }
+        .logo {
+            padding: 20px;
+            font-size: 1.7em;
+            text-align: center;
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--glow);
+            border-bottom: 1px solid var(--accent);
+        }
+        .nav-item {
+            padding: 16px 25px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: #1f0000;
+            border-left: 5px solid var(--accent);
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        h1 {
+            font-size: 2.1em;
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--glow);
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            margin: 8px 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            width: 100%;
+            max-width: 320px;
+        }
+        .btn:hover {
+            background: #ff2222;
+            transform: scale(1.03);
+            box-shadow: 0 0 25px var(--glow);
+        }
+
+        input, textarea {
+            background: #1a0000;
+            border: 1px solid #550000;
+            color: var(--text);
+            padding: 14px;
+            width: 100%;
+            margin: 10px 0;
+            font-size: 1em;
+        }
+        textarea { min-height: 140px; }
+
+        .note {
+            background: #140000;
+            padding: 18px;
+            margin: 15px 0;
+            border: 1px solid #550000;
+        }
+
+        audio { width: 100%; margin: 20px 0; }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 2px solid var(--accent);
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 10px 0;
+            }
+            .logo { font-size: 1.5em; padding: 12px; }
+            .nav-item {
+                padding: 12px 20px;
+                font-size: 0.95em;
+                text-align: center;
+                border-left: none;
+            }
+            .main { padding: 20px 15px; }
+            h1 { font-size: 1.8em; }
+            .btn { padding: 16px; font-size: 1.1em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">VOID DRIVE</div>
+        <div class="nav-item active" onclick="switchTab(0)">📝 Notes</div>
+        <div class="nav-item" onclick="switchTab(1)">🎵 Audio</div>
+    </div>
+
+    <div class="main">
+        <!-- Notes Tab -->
+        <div id="tab0">
+            <h1>If you have come this far...</h1>
+            <p style="color:#aa4444;margin-bottom:20px;">why not go through it</p>
+            
+            <input type="text" id="noteTitle" placeholder="Title your sin...">
+            <textarea id="noteContent" placeholder="Write your secret text here..."></textarea>
+            
+            <button class="btn" onclick="addNote()">💾 ADD TO THE VOID</button>
+            <button class="btn" onclick="generateShareLink()">🔗 GENERATE SHARE LINK</button>
+            
+            <div id="notesContainer" style="margin-top:25px;"></div>
+        </div>
+
+        <!-- Audio Tab -->
+        <div id="tab1" style="display:none">
+            <h1>Audio Vault</h1>
+            <div style="background:#140000;padding:25px;border:1px solid #8B0000;">
+                <strong>🎵 Music Disc - 11 (C418)</strong><br><br>
+                <audio id="voicePlayer" controls preload="auto" 
+                       src="https://files.catbox.moe/rtvlvr.mp3">
+                </audio>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let notes = [];
+
+        function switchTab(n) {
+            document.getElementById('tab0').style.display = n === 0 ? 'block' : 'none';
+            document.getElementById('tab1').style.display = n === 1 ? 'block' : 'none';
+        }
+
+        function addNote() {
+            const title = document.getElementById('noteTitle').value.trim() || "Untitled";
+            const content = document.getElementById('noteContent').value.trim();
+            if (!content) return alert("Write something first 😏");
+            
+            notes.push({ title, content, time: new Date().toLocaleString() });
+            renderNotes();
+            
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notesContainer');
+            container.innerHTML = notes.map(n => `
+                <div class="note">
+                    <strong>${n.title}</strong> <small style="color:#666;">${n.time}</small>
+                    <p style="margin-top:12px; line-height:1.6;">${n.content}</p>
+                </div>
+            `).join('');
+        }
+
+        function generateShareLink() {
+            if (notes.length === 0) return alert("Add some notes first!");
+            const encoded = encodeURIComponent(JSON.stringify(notes));
+            const shareURL = window.location.origin + window.location.pathname + '?notes=' + encoded;
+            
+            navigator.clipboard.writeText(shareURL).then(() => {
+                alert("✅ Share link copied!\n\nSend this to anyone:\n" + shareURL);
+            });
+        }
+
+        function loadSharedNotes() {
+            const params = new URLSearchParams(window.location.search);
+            const data = params.get('notes');
+            if (data) {
+                try {
+                    notes = JSON.parse(decodeURIComponent(data));
+                    renderNotes();
+                } catch(e) {}
+            }
+        }
+
+        window.onload = () => {
+            loadSharedNotes();
+            switchTab(0);
+        };
+    </script>
+</body>
+</html>
